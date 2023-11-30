@@ -37,9 +37,9 @@ def main():
     # create tables based on the models
     conn.create_tables(MODELS)
 
-    while (True):
+    while True:
         # enter auth application
-        response: Message = auth.mainloop(conn)
+        response = auth.mainloop(conn)
 
         match response.message:
             case Messages.LOGIN_SUCCESS:

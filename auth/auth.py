@@ -6,11 +6,11 @@ from helper import Option, index, choice
 from messages import Messages, Message
 
 
-def validate_password(plain_pw: str, hashed_pw: bytes):
+def validate_password(plain_pw: str, hashed_pw: bytes) -> bool:
     return bcrypt.checkpw(plain_pw.encode("utf8"), hashed_pw)
 
 
-def login(conn: db.DBConnection) -> Message:
+def login(conn: db.DBConnection) -> Message[db.models.User]:
     print(f"\n{'  LOGIN  '::^50}\n")
     email: str = input(f"{'Enter your email: ':<25}")
     password: str = input(f"{'Enter your password: ':<25}")
@@ -23,7 +23,7 @@ def login(conn: db.DBConnection) -> Message:
     user = db.models.User(**data)
 
 
-def sign_up(conn: db.DBConnection) -> Message:
+def sign_up(conn: db.DBConnection) -> Message[None]:
     print(f"\n{'  SIGN UP  '::^50}\n")
     name: str = input(f"{'Enter your name: ':<25}")
     email: str = input(f"{'Enter your email: ':<25}")
@@ -47,17 +47,17 @@ def sign_up(conn: db.DBConnection) -> Message:
     return Message(Messages.SIGN_UP_SUCCESS, None)
 
 
-def mainloop(conn: db.DBConnection) -> Message:
+def mainloop(conn: db.DBConnection) -> Message[db.models.User | None]:
     print(f"\n{'  AUTHENTICATION  '::^50}\n")
-    options = {
-        "1": Option("Login", login),
-        "2": Option("Sign Up", sign_up),
-        "3": Option("Quit", lambda _: Message(Messages.QUIT, None))
-    }
+    options = [
+        Option("Login", login),
+        Option("Sign Up", sign_up),
+        Option("Quit", lambda _: Message(Messages.QUIT, None)),
+    ]
 
     index(options)
-    option: Option = choice(options)
+    option = choice(options)
 
-    response: Message = option.func(conn)
+    response = option.func(conn)
 
     return response
