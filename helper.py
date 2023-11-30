@@ -11,11 +11,13 @@ class Option(Generic[T, U]):
     func: Callable[T, U]
 
 
-def index(options: dict[str, Option]) -> None:
-    for i, option in options.items():
-        print(f"{i}. {option.prompt}")
+def index(options: list[Option]) -> None:
+    for i, option in enumerate(options):
+        print(f"{i+1}. {option.prompt}")
 
 
-def choice(options: dict[str, Option]) -> Option:
-    key = input("Enter an option: ")
-    return options.get(key, None)
+def choice(options: list[Option]) -> Option|None:
+    index = input("Enter an option: ")
+    if not 0<=int(index)-1<len(index):
+        return None
+    return options[int(index)-1]
