@@ -14,12 +14,11 @@ __TABLES__ = {
 
 
 class DBConnection(Protocol):
-
     def create_connection(self):
         """Create the connection with the selected engine"""
         ...
 
-    def create_table(self, columns: dict[str, str]):
+    def create_table(self, table: str, columns: dict[str, str]):
         """Create a table according to the defined in the models module"""
         ...
 
@@ -45,7 +44,6 @@ class DBConnection(Protocol):
 
 
 class SQLiteDBConnection:
-
     def __init__(self, url: str):
         self.url = url
 
@@ -54,11 +52,11 @@ class SQLiteDBConnection:
         cur = self.conn.cursor()
         cur.execute("PRAGMA foreign_keys = ON;")
 
-    def create_table(self, model: Type[DBModel]) -> None:
+    def create_table(self, table: str, columns: dict[str, str]) -> None:
         sql = model.create_table_sql()
-        cursor = self.conn.cursor()
+        cur = self.conn.cursor()
         try:
-            cursor.execute(sql)
+            cur.execute(sql)
         except Exception as e:
             print(e)
             print(sql)
