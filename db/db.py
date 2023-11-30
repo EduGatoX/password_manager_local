@@ -19,12 +19,12 @@ class DBConnection(Protocol):
         """Create the connection with the selected engine"""
         ...
 
-    def create_tables(self):
-        """Create all the tables defined in the models module"""
+    def create_table(self, columns: dict[str, str]):
+        """Create a table according to the defined in the models module"""
         ...
 
-    def insert_into_table(self, table: str, model: DBModel):
-        """Insert a DBModel into the 'table'"""
+    def insert_into_table(self, table: str, **data):
+        """Insert 'data' into 'table'"""
         ...
 
     def select_all_from_table(self, table: str):
@@ -32,7 +32,7 @@ class DBConnection(Protocol):
         ...
 
     def select_from_table_where(self, table: str, **kw):
-        """Select all the entries matching the conditions given by 'kw'"""
+        """Select all the entries from 'table' matching the conditions given by 'kw'"""
         ...
 
     def commit(self):
@@ -51,12 +51,8 @@ class SQLiteDBConnection:
 
     def create_connection(self):
         self.conn = sqlite3.connect(self.url)
-        cursor = self.conn.cursor()
-        cursor.execute("PRAGMA foreign_keys = ON;")
-
-    def create_tables(self, models: list[Type[DBModel]]) -> None:
-        for model in models:
-            self.create_table(model)
+        cur = self.conn.cursor()
+        cur.execute("PRAGMA foreign_keys = ON;")
 
     def create_table(self, model: Type[DBModel]) -> None:
         sql = model.create_table_sql()
