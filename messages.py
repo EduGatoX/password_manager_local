@@ -1,9 +1,5 @@
 from enum import Enum
 from dataclasses import dataclass
-from typing import TypeVar
-
-
-T = TypeVar("T")
 
 
 class Messages(Enum):
@@ -14,6 +10,6 @@ class Messages(Enum):
 
 
 @dataclass
-class Message:
+class Message[T]:
     message: str
     data: T
