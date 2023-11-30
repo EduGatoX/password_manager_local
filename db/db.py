@@ -53,7 +53,11 @@ class SQLiteDBConnection:
         cur.execute("PRAGMA foreign_keys = ON;")
 
     def create_table(self, table: str, columns: dict[str, str]) -> None:
-        sql = model.create_table_sql()
+        if table not in __TABLES__:
+            raise ValueError(f"Table {table} is not defined as a model.")
+        
+        sql = ""
+
         cur = self.conn.cursor()
         try:
             cur.execute(sql)
