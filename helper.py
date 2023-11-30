@@ -1,14 +1,11 @@
 from dataclasses import dataclass
-from typing import Generic, TypeVar, Callable
-
-T = TypeVar("T")
-U = TypeVar("U")
+from typing import Callable
 
 
 @dataclass
-class Option(Generic[T, U]):
+class Option[T, U]:
     prompt: str
-    func: Callable[T, U]
+    func: Callable[[T], U]
 
 
 def index(options: list[Option]) -> None:
@@ -16,8 +13,8 @@ def index(options: list[Option]) -> None:
         print(f"{i+1}. {option.prompt}")
 
 
-def choice(options: list[Option]) -> Option|None:
+def choice(options: list[Option]) -> Option | None:
     index = input("Enter an option: ")
-    if not 0<=int(index)-1<len(index):
+    if not 0 <= int(index) - 1 < len(index):
         return None
-    return options[int(index)-1]
+    return options[int(index) - 1]
