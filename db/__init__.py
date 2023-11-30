@@ -1,2 +1,2 @@
 from .db import DBConnectionFactory, DBConnection
-import models
+from . import models

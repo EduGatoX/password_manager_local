@@ -15,6 +15,6 @@ def index(options: list[Option]) -> None:
 
 def choice(options: list[Option]) -> Option | None:
     index = input("Enter an option: ")
-    if not 0 <= int(index) - 1 < len(index):
+    if not (0 <= int(index) - 1 < len(options)):
         return None
     return options[int(index) - 1]
