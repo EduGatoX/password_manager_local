@@ -44,12 +44,12 @@ class Integer(SQLDataType[int]):
 
 
 class Float(SQLDataType[float]):
-    def __init__(self, db_engine: str, value: float, nullable: bool = False):#TODO: Bug - Should be nullable = True by default
+    def __init__(self, db_engine: str, value: float, nullable: bool = True):
         super().__init__(db_engine, float, value, nullable=nullable)
 
 
 class Text(SQLDataType[str]):
-    def __init__(self, db_engine: str, value: str, nullable: bool = False):#TODO: Bug - Should be nullable = True by default
+    def __init__(self, db_engine: str, value: str, nullable: bool = True):
         super().__init__(db_engine, str, value, nullable=nullable)
 
 
