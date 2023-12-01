@@ -17,7 +17,6 @@ class User:
 
     def dump_data(self) -> dict[str, SQLDataType]:
         data = dict(self.__dict__)
-        del data["user_id"]
         return data
 
     def __repr__(self):
