@@ -30,8 +30,8 @@ class SQLDataType[T]:
     @property
     def sql_type(self) -> str:
         sql = python_sql_type_relationships.get(self.db_engine, None).get(self.py_type, None)
-        sql += "" if self.nullable else " NOT NULLABLE"
-        sql += "" if not self.primary_key else " PRIMARY KEY"
+        sql += "" if self.nullable else " NOT NULLABLE"     # TODO: Should be dependent on db_engine and now it's hard coded
+        sql += "" if not self.primary_key else " PRIMARY KEY" # TODO: Should be dependent on db_engine and now it's hard coded
         return sql
     
     def __str__(self) -> str:
@@ -44,12 +44,12 @@ class Integer(SQLDataType[int]):
 
 
 class Float(SQLDataType[float]):
-    def __init__(self, db_engine: str, value: float, nullable: bool = False):
+    def __init__(self, db_engine: str, value: float, nullable: bool = False):#TODO: Bug - Should be nullable = True by default
         super().__init__(db_engine, float, value, nullable=nullable)
 
 
 class Text(SQLDataType[str]):
-    def __init__(self, db_engine: str, value: str, nullable: bool = False):
+    def __init__(self, db_engine: str, value: str, nullable: bool = False):#TODO: Bug - Should be nullable = True by default
         super().__init__(db_engine, str, value, nullable=nullable)
 
 
