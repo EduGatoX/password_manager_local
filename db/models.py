@@ -39,5 +39,5 @@ class Password:
         return data
 
     def __repr__(self):
-        result = f"Password(name={self.app_url}, password={self.password})"
+        result = f"Password(name={self.app_url}, username={self.username}, password={self.password})"
         return result
