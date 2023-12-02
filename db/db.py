@@ -1,7 +1,6 @@
 import sqlite3
 from typing import Protocol
 
-from .models import DBModel
 from .types import SQLDataType
 
 
@@ -15,7 +14,7 @@ from .types import SQLDataType
 
 __TABLES__ = {
     "users": ["name", "email", "hashed_pw"],
-    "passwords": ["app_name", "app_url", "username", "password","user_id"]
+    "passwords": ["app_name", "app_url", "username", "password","user_id"],
 }
 
 
@@ -24,11 +23,11 @@ class DBConnection(Protocol):
         """Create the connection with the selected engine"""
         ...
 
-    def create_table(self, table: str, columns: dict[str, str]):
+    def create_table(self, table: str, columns: dict[str, SQLDataType]):
         """Create a table according to the defined in the models module"""
         ...
 
-    def insert_into_table(self, table: str, **data):
+    def insert_into_table(self, table: str, data: dict[str, SQLDataType]):
         """Insert 'data' into 'table'"""
         ...
 
@@ -58,12 +57,12 @@ class SQLiteDBConnection:
         cur = self.conn.cursor()
         cur.execute("PRAGMA foreign_keys = ON;")
 
-    def create_table(self, tablename: str, data: dict[str, SQLDataType]) -> None:
+    def create_table(self, tablename: str, columns: dict[str, SQLDataType]) -> None:
         if tablename not in __TABLES__:
             raise ValueError(f"Table {tablename} is not defined as a model.")
         
         sql = f"CREATE TABLE IF NOT EXISTS {tablename} ("
-        sql += f"{', '.join([f"{column_name} {d_type.sql_type}" for column_name, d_type in data.items()])}"
+        sql += f"{', '.join([f"{column_name} {d_type.sql_type}" for column_name, d_type in columns.items()])}"
         sql += ");"
 
         cur = self.conn.cursor()
