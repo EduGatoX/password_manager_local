@@ -30,7 +30,7 @@ class SQLDataType[T]:
     @property
     def sql_type(self) -> str:
         sql = python_sql_type_relationships.get(self.db_engine, None).get(self.py_type, None)
-        sql += "" if self.nullable else " NOT NULLABLE"     # TODO: Should be dependent on db_engine and now it's hard coded
+        sql += "" if self.nullable else " NOT NULL"     # TODO: Should be dependent on db_engine and now it's hard coded
         sql += "" if not self.primary_key else " PRIMARY KEY" # TODO: Should be dependent on db_engine and now it's hard coded
         return sql
     
