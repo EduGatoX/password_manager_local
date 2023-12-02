@@ -1,5 +1,5 @@
 import sqlite3
-from typing import Protocol
+from typing import Protocol, Any
 
 from .types import SQLDataType
 
@@ -9,34 +9,35 @@ from .types import SQLDataType
 # OR OBJECT THAT IS ALREADY PARSED FROM THE MODEL USING AND
 # ADAPTER PATTERN
 
+# TODO: I need to find a way to not depend of SQLDataType and instead
+# pass regular python types (maybe pass a dictionary instead of SQLDataType)
+
 # TODO: Maybe I need to return Messages from DBConnection to the client
 # in order to test/verify the response of every method.
 
 __TABLES__ = {
     "users": ["name", "email", "hashed_pw"],
-    "passwords": ["app_name", "app_url", "username", "password","user_id"],
+    "passwords": ["app_name", "app_url", "username", "password", "user_id"],
 }
 
 
 class DBConnection(Protocol):
     def create_connection(self):
         """Create the connection with the selected engine"""
-        ...
 
     def create_table(self, tablename: str, columns: dict[str, SQLDataType]):
         """Create a new table called 'tablename'.
-        
+
         Args:
             tablename (str) : The name of the new table.
             columns (dict[str, SQLDataType]) : A dictionary where (1) its keys represent the
                 name of the columns of the new table and (2) its values represent the data type
                 of each column (use SQLDataType of module db/types.py)
         """
-        ...
 
     def insert_into_table(self, tablename: str, data: dict[str, SQLDataType]):
         """Insert 'data' into the table named 'tablename'
-        
+
         Args:
             tablename (str) : The name of the table.
             data (dict[str, SQLDataType]) : A dictionary where (1) its keys represent the
@@ -44,23 +45,18 @@ class DBConnection(Protocol):
                 SQLDataType that contain the sql data type and the value to be inserted for each column
                 (use SQLDataType of module db/types.py)
         """
-        ...
 
-    def select_all_from_table(self, table: str):
+    def select_all_from_table(self, tablename: str) -> list[tuple[Any, ...]]:
         """Select all the entries in 'table'"""
-        ...
 
     def select_from_table_where(self, table: str, **kw):
         """Select all the entries from 'table' matching the conditions given by 'kw'"""
-        ...
 
     def commit(self):
         """Commit changes of the current session"""
-        ...
 
     def close_connection(self):
         """Close the connection"""
-        ...
 
 
 class SQLiteDBConnection:
@@ -75,9 +71,11 @@ class SQLiteDBConnection:
     def create_table(self, tablename: str, columns: dict[str, SQLDataType]) -> None:
         if tablename not in __TABLES__:
             raise ValueError(f"Table {tablename} is not defined as a model.")
-        
+
+        column_type_stmts = [f"{column_name} {d_type.sql_type}" for column_name, d_type in columns.items()]
+
         sql = f"CREATE TABLE IF NOT EXISTS {tablename} ("
-        sql += f"{', '.join([f"{column_name} {d_type.sql_type}" for column_name, d_type in columns.items()])}"
+        sql += f"{', '.join(column_type_stmts)}"
         sql += ");"
 
         cur = self.conn.cursor()
@@ -91,8 +89,15 @@ class SQLiteDBConnection:
         if tablename not in __TABLES__:
             raise ValueError(f"Table '{tablename}' does not exist in the database")
 
-        l = list(filter(lambda x: all(x),[(None, None) if d_type.primary_key else (key, d_type.value) for key, d_type in data.items()]))
-        columns, values = tuple(zip(*l))
+        # Extract values from data and assign to None the column that is primary key
+        column_value_stmts = [
+            (None, None) if d_type.primary_key else (column, d_type.value) for column, d_type in data.items()
+        ]
+
+        # Filter the previous list and take out the None values in order to not
+        # add the primary key (because it is automatically added by the engine)
+        filtered_column_value_stmts = list(filter(lambda x: all(x), column_value_stmts))
+        columns, values = tuple(zip(*filtered_column_value_stmts))
 
         sql = f"INSERT INTO {tablename} \n"
         sql += f"({', '.join(columns)}) \n"
@@ -106,15 +111,19 @@ class SQLiteDBConnection:
             print(e)
             print(sql)
 
-    def select_all_from_table(self, table: str):
-        if table not in __TABLES__:
-            raise ValueError(f"Table '{table}' does not exist in the database")
-        sql = f"SELECT * FROM {table}"
+    def select_all_from_table(self, tablename: str) -> list[tuple[Any, ...]]:
+        if tablename not in __TABLES__:
+            raise ValueError(f"Table '{tablename}' does not exist in the database")
+
+        sql = f"SELECT * FROM {tablename};"
+
         cur = self.conn.cursor()
         try:
             cur.execute(sql)
         except Exception as e:
             print(e)
+
+        return cur.fetchall()
 
     def select_from_table_where(self, table: str, **kw):
         if table not in __TABLES__:
