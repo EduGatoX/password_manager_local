@@ -73,23 +73,24 @@ class SQLiteDBConnection:
             print(e)
             print(sql)
 
-    def insert_into_table(self, table: str, model: DBModel) -> bool:
-        if table not in __TABLES__:
-            raise ValueError(f"Table '{table}' does not exist in the database")
-        data = model.dump_data()
-        sql = f"INSERT INTO {table} "
-        sql += f"({', '.join(data.keys())}) "
-        sql += f"VALUES ({', '.join(['?' for val in data.values()])});"
+    def insert_into_table(self, tablename: str, data: dict[str, SQLDataType]) -> None:
+        if tablename not in __TABLES__:
+            raise ValueError(f"Table '{tablename}' does not exist in the database")
+
+        l = list(filter(lambda x: all(x),[(None, None) if d_type.primary_key else (key, d_type.value) for key, d_type in data.items()]))
+        columns, values = tuple(zip(*l))
+
+        sql = f"INSERT INTO {tablename} \n"
+        sql += f"({', '.join(columns)}) \n"
+        sql += f"VALUES ({', '.join(['?' for val in values])});"
+
         cur = self.conn.cursor()
-        print(sql)
+
         try:
-            cur.execute(sql, tuple(data.values()))
-            print(f"insert of {model} went ok")
-            return True
+            cur.execute(sql, values)
         except Exception as e:
             print(e)
-            print(f"insert of {model} went wrong")
-            return False
+            print(sql)
 
     def select_all_from_table(self, table: str):
         if table not in __TABLES__:
