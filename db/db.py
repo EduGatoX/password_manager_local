@@ -1,15 +1,21 @@
 import sqlite3
-from typing import Protocol, Type
+from typing import Protocol
 
 from .models import DBModel
+from .types import SQLDataType
+
 
 # TODO: I NEED TO SEPARATE MODELS FROM DB CONNECTIONS
 # BY PASSING THE DATA TO THE DB CONNECTION AS A DICTIONARY
 # OR OBJECT THAT IS ALREADY PARSED FROM THE MODEL USING AND
 # ADAPTER PATTERN
 
+# TODO: Maybe I need to return Messages from DBConnection to the client
+# in order to test/verify the response of every method.
+
 __TABLES__ = {
     "users": ["name", "email", "hashed_pw"],
+    "passwords": ["app_name", "app_url", "username", "password","user_id"]
 }
 
 
@@ -52,11 +58,13 @@ class SQLiteDBConnection:
         cur = self.conn.cursor()
         cur.execute("PRAGMA foreign_keys = ON;")
 
-    def create_table(self, table: str, columns: dict[str, str]) -> None:
-        if table not in __TABLES__:
-            raise ValueError(f"Table {table} is not defined as a model.")
+    def create_table(self, tablename: str, data: dict[str, SQLDataType]) -> None:
+        if tablename not in __TABLES__:
+            raise ValueError(f"Table {tablename} is not defined as a model.")
         
-        sql = ""
+        sql = f"CREATE TABLE IF NOT EXISTS {tablename} ("
+        sql += f"{', '.join([f"{column_name} {d_type.sql_type}" for column_name, d_type in data.items()])}"
+        sql += ");"
 
         cur = self.conn.cursor()
         try:
@@ -69,8 +77,8 @@ class SQLiteDBConnection:
         if table not in __TABLES__:
             raise ValueError(f"Table '{table}' does not exist in the database")
         data = model.dump_data()
-        sql = f"INSERT INTO {table} \n"
-        sql += f"({', '.join(data.keys())}) \n"
+        sql = f"INSERT INTO {table} "
+        sql += f"({', '.join(data.keys())}) "
         sql += f"VALUES ({', '.join(['?' for val in data.values()])});"
         cur = self.conn.cursor()
         print(sql)
@@ -113,7 +121,7 @@ class SQLiteDBConnection:
         self.conn.close()
 
 
-def DBConnectionFactory(db_type: str, db_url: str) -> DBConnection:
-    match db_type:
-        case "sqlite":
+def DBConnectionFactory(db_engine: str, db_url: str) -> DBConnection:
+    match db_engine:
+        case "sqlite3":
             return SQLiteDBConnection(db_url)
