@@ -23,12 +23,27 @@ class DBConnection(Protocol):
         """Create the connection with the selected engine"""
         ...
 
-    def create_table(self, table: str, columns: dict[str, SQLDataType]):
-        """Create a table according to the defined in the models module"""
+    def create_table(self, tablename: str, columns: dict[str, SQLDataType]):
+        """Create a new table called 'tablename'.
+        
+        Args:
+            tablename (str) : The name of the new table.
+            columns (dict[str, SQLDataType]) : A dictionary where (1) its keys represent the
+                name of the columns of the new table and (2) its values represent the data type
+                of each column (use SQLDataType of module db/types.py)
+        """
         ...
 
-    def insert_into_table(self, table: str, data: dict[str, SQLDataType]):
-        """Insert 'data' into 'table'"""
+    def insert_into_table(self, tablename: str, data: dict[str, SQLDataType]):
+        """Insert 'data' into the table named 'tablename'
+        
+        Args:
+            tablename (str) : The name of the table.
+            data (dict[str, SQLDataType]) : A dictionary where (1) its keys represent the
+                names of the columns that are called in the insertion and (2) its values are objects of type
+                SQLDataType that contain the sql data type and the value to be inserted for each column
+                (use SQLDataType of module db/types.py)
+        """
         ...
 
     def select_all_from_table(self, table: str):
