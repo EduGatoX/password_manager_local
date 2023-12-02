@@ -2,6 +2,8 @@ from .types import SQLDataType, Integer, Text
 from typing import Protocol
 from dataclasses import dataclass
 
+# TODO: I need a model to represent the structure or schema of
+# a Table, and another model that represent the data.
 
 class DBModel(Protocol):
     def dump_data(self) -> dict[str, SQLDataType]:
