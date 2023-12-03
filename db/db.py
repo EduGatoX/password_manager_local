@@ -9,7 +9,7 @@ from .types import SQLDataType
 # OR OBJECT THAT IS ALREADY PARSED FROM THE MODEL USING AND
 # ADAPTER PATTERN
 
-# TODO: I need to find a way to not depend of SQLDataType and instead
+# TODO: I need to find a way to not depend on SQLDataType and instead
 # pass regular python types (maybe pass a dictionary instead of SQLDataType)
 
 # TODO: Maybe I need to return Messages from DBConnection to the client
@@ -26,7 +26,7 @@ class DBConnection(Protocol):
         """Create the connection with the selected engine"""
 
     def create_table(self, tablename: str, columns: dict[str, SQLDataType]):
-        """Create a new table called 'tablename'.
+        """Create a new table named 'tablename'.
 
         Args:
             tablename (str) : The name of the new table.
@@ -47,7 +47,15 @@ class DBConnection(Protocol):
         """
 
     def select_all_from_table(self, tablename: str) -> list[tuple[Any, ...]]:
-        """Select all the entries in 'table'"""
+        """Select all the entries from table called 'tablename'
+
+        Args:
+            tablename (str) : The name of the table.
+
+        Return:
+            A list with all the table entries. Each entry is a tuple containing the values
+            for each column using basic python datatypes.
+        """
 
     def select_from_table_where(self, table: str, **kw):
         """Select all the entries from 'table' matching the conditions given by 'kw'"""
