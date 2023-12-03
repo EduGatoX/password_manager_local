@@ -73,6 +73,22 @@ class DBConnection(Protocol):
             for each column using basic python datatypes.
         """
 
+    def update_from_table_where(self, tablename: str, conditions: dict[str, SQLDataType], data: dict[str, SQLDataType]):
+        """Update all the entries from table name 'tablename' matching the conditions given by the dictionary 'conditions'
+        and replacing the values with the data inside 'data'.
+
+        Args:
+            tablename (str) : The name of the table
+            conditions (dict[str, SQLDataType]) : A dictionary where (1) its keys represent the
+                names of the columns that are called in the insertion and (2) its values are objects of type
+                SQLDataType that contain the sql data type and the value that is part of the condition for
+                the respecting column (use SQLDataType of module db/types.py)
+            data (dict[str, SQLDataType]) : A dictionary where (1) its keys represent the
+                names of the columns that are called in the update and (2) its values are objects of type
+                SQLDataType that contain the sql data type and the value to be updated for each column
+                (use SQLDataType of module db/types.py)
+        """
+
     def commit(self):
         """Commit changes of the current session"""
 
@@ -154,7 +170,7 @@ class SQLiteDBConnection:
 
         sql = f"SELECT * FROM {tablename} \n\t"
         sql += f"WHERE {', \n\t'.join([f'{k} = ?' for k, _ in conditions.items()])};"
-        
+
         cur = self.conn.cursor()
         try:
             cur.execute(sql, condition_values)
@@ -162,6 +178,26 @@ class SQLiteDBConnection:
         except Exception as e:
             print(e)
             return None
+
+    def update_from_table_where(self, tablename: str, conditions: dict[str, SQLDataType], data: dict[str, SQLDataType]):
+        if tablename not in __TABLES__:
+            raise ValueError(f"Table '{tablename}' does not exist in the database")
+
+        new_values = [v.value for v in data.values()]
+        condition_values = [v.value for v in conditions.values()]
+
+        sql = f"UPDATE {tablename} \n"
+        sql += f"SET {', \n\t'.join([f'{k} = ?' for k in data.keys()])} \n"
+        sql += f"WHERE {', \n\t'.join([f'{k} = ?' for k in conditions.keys()])};"
+
+        cur = self.conn.cursor()
+        try:
+            cur.execute(sql, [*new_values, *condition_values])
+            # return cur.fetchall()
+        except Exception as e:
+            print(e)
+            print(sql)
+            # return None
 
     def commit(self):
         self.conn.commit()
