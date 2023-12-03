@@ -58,19 +58,19 @@ class DBConnection(Protocol):
         """
 
     def select_from_table_where(self, tablename: str, conditions: dict[str, SQLDataType]) -> list[tuple[Any, ...]]:
-        """Select all the entries from table named 'tablename' matching the conditions given by 
+        """Select all the entries from table named 'tablename' matching the conditions given by
         the dictionary 'conditions'
-        
+
         Args:
             tablename (str) : The name of the table
             conditions (dict[str, SQLDataType]) : A dictionary where (1) its keys represent the
                 names of the columns that are called in the insertion and (2) its values are objects of type
                 SQLDataType that contain the sql data type and the value that is part of the condition for
                 the respecting column (use SQLDataType of module db/types.py)
-        
+
         Return:
             A list with all the table entries matching the conditions. Each entry is a tuple containing the values
-            for each column using basic python datatypes.     
+            for each column using basic python datatypes.
         """
 
     def commit(self):
@@ -146,14 +146,18 @@ class SQLiteDBConnection:
 
         return cur.fetchall()
 
-    def select_from_table_where(self, table: str, **kw):
-        if table not in __TABLES__:
-            raise ValueError(f"Table '{table}' does not exist in the database")
-        sql = f"SELECT * FROM {table} "
-        sql += f"WHERE {', '.join([f'{k} = {v}' for k, v in kw.items()])};"
+    def select_from_table_where(self, tablename: str, conditions: dict[str, SQLDataType]) -> list[tuple[Any, ...]]:
+        if tablename not in __TABLES__:
+            raise ValueError(f"Table '{tablename}' does not exist in the database")
+
+        condition_values = [f"{v.value}" for v in conditions.values()]
+
+        sql = f"SELECT * FROM {tablename} \n\t"
+        sql += f"WHERE {', \n\t'.join([f'{k} = ?' for k, _ in conditions.items()])};"
+        
         cur = self.conn.cursor()
         try:
-            cur.execute(sql)
+            cur.execute(sql, condition_values)
             return cur.fetchall()
         except Exception as e:
             print(e)
