@@ -57,8 +57,21 @@ class DBConnection(Protocol):
             for each column using basic python datatypes.
         """
 
-    def select_from_table_where(self, table: str, **kw):
-        """Select all the entries from 'table' matching the conditions given by 'kw'"""
+    def select_from_table_where(self, tablename: str, conditions: dict[str, SQLDataType]) -> list[tuple[Any, ...]]:
+        """Select all the entries from table named 'tablename' matching the conditions given by 
+        the dictionary 'conditions'
+        
+        Args:
+            tablename (str) : The name of the table
+            conditions (dict[str, SQLDataType]) : A dictionary where (1) its keys represent the
+                names of the columns that are called in the insertion and (2) its values are objects of type
+                SQLDataType that contain the sql data type and the value that is part of the condition for
+                the respecting column (use SQLDataType of module db/types.py)
+        
+        Return:
+            A list with all the table entries matching the conditions. Each entry is a tuple containing the values
+            for each column using basic python datatypes.     
+        """
 
     def commit(self):
         """Commit changes of the current session"""
