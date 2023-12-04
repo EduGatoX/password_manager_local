@@ -74,19 +74,31 @@ class DBConnection(Protocol):
         """
 
     def update_from_table_where(self, tablename: str, conditions: dict[str, SQLDataType], data: dict[str, SQLDataType]):
-        """Update all the entries from table name 'tablename' matching the conditions given by the dictionary 'conditions'
+        """Update all the entries from table named 'tablename' matching the conditions given by the dictionary 'conditions'
         and replacing the values with the data inside 'data'.
 
         Args:
             tablename (str) : The name of the table
             conditions (dict[str, SQLDataType]) : A dictionary where (1) its keys represent the
-                names of the columns that are called in the insertion and (2) its values are objects of type
+                names of the columns that are called in the update and (2) its values are objects of type
                 SQLDataType that contain the sql data type and the value that is part of the condition for
                 the respecting column (use SQLDataType of module db/types.py)
             data (dict[str, SQLDataType]) : A dictionary where (1) its keys represent the
                 names of the columns that are called in the update and (2) its values are objects of type
                 SQLDataType that contain the sql data type and the value to be updated for each column
                 (use SQLDataType of module db/types.py)
+        """
+
+    def delete_from_table_where(self, tablename: str, conditions: dict[str, SQLDataType]):
+        """Delete all the entries from table named 'tablename' matching the conditions given
+        by the dictionary 'conditions'.
+
+        Args:
+            tablename (str) : The name of the table.
+            conditions (dict[str, SQLDataType]) : A dictionary where (1) its keys represent the
+                names of the columns that are called in the deletion and (2) its values are objects of type
+                SQLDataType that contain the sql data type and the value that is part of the condition for
+                the respecting column (use SQLDataType of module db/types.py)
         """
 
     def commit(self):
@@ -193,11 +205,25 @@ class SQLiteDBConnection:
         cur = self.conn.cursor()
         try:
             cur.execute(sql, [*new_values, *condition_values])
-            # return cur.fetchall()
         except Exception as e:
             print(e)
             print(sql)
-            # return None
+
+    def delete_from_table_where(self, tablename: str, conditions: dict[str, SQLDataType]):
+        if tablename not in __TABLES__:
+            raise ValueError(f"Table '{tablename}' does not exist in the database")
+
+        condition_values = [v.value for v in conditions.values()]
+
+        sql = f"DELETE FROM {tablename} \n"
+        sql += f"WHERE {', \n\t'.join([f'{k} = ?' for k in conditions.keys()])};"
+
+        cur = self.conn.cursor()
+        try:
+            cur.execute(sql, condition_values)
+        except Exception as e:
+            print(e)
+            print(sql)
 
     def commit(self):
         self.conn.commit()
