@@ -4,6 +4,9 @@ from typing import Protocol, Any
 # TODO: Maybe I need to return Messages from DBConnection to the client
 # in order to test/verify the response of every method.
 
+# TODO: I should not depend on the dictionary __TABLES__, this information
+# should come from the module models.py
+
 __TABLES__ = {
     "users": ["name", "email", "hashed_pw"],
     "passwords": ["app_name", "app_url", "username", "password", "user_id"],
