@@ -6,6 +6,7 @@ class Messages(Enum):
     SIGN_UP_SUCCESS = "sign_up_success"
     SIGN_UP_FAILURE = "sign_up_failure"
     LOGIN_SUCCESS = "login_success"
+    LOGIN_FAILURE = "login_failure"
     QUIT = "quit"
 
 
