@@ -1,5 +1,5 @@
 # Additional files entered by hand
-local_test.py
+local_test*.py
 *.db
 
 # Byte-compiled / optimized / DLL files
