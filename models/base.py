@@ -2,7 +2,7 @@ from typing import Any
 from .typing import SQLDataType
 
 
-class TableModel(type):
+class Table(type):
     """Metaclass that represents a Table. The main objectives of this metaclass are:
 
     1) Filter the class attributes so that it guarantees that they are an instance
@@ -47,5 +47,5 @@ class TableModel(type):
         return filtered_dict
 
 
-class TableModel(metaclass=TableModel):
+class TableModel(metaclass=Table):
     pass
