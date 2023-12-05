@@ -3,16 +3,13 @@ import db
 import password as pw
 
 from messages import Message, Messages
+from models import MODELS
 
-# DB engine to use: "sqlite", ...
-DB_ENGINE = "sqlite"
+# DB engine to use: "sqlite3", ...
+DB_ENGINE = "sqlite3"
 
 # DB URL
 DATABASE_URL = "password.db"
-
-# create new models in db.models and then put them here in the list
-# as a type
-MODELS = [db.models.User, db.models.Password]
 
 
 def greet():
@@ -32,10 +29,11 @@ def main():
     conn = db.DBConnectionFactory(DB_ENGINE, DATABASE_URL)
 
     # create connection
-    conn.create_connection()
+    conn.connect()
 
     # create tables based on the models
-    conn.create_tables(MODELS)
+    for model in MODELS:
+        conn.create_table(model)
 
     while True:
         # enter auth application
