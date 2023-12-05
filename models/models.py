@@ -9,8 +9,10 @@ one should inherit from TableModel.
 __tablename__ of type str, where you should put the name of the table you want
 to use for it in the database.
 
-4) Finally, create all the attributes you want of type SQLDataType (Integer, Text
+4) Create all the attributes you want of type SQLDataType (Integer, Text
 Float or NullType). You should select one as a primary key.
+
+5) Finally, add the models to the list MODELS at the end of this module.
 """
 
 from .base import TableModel
@@ -29,8 +31,13 @@ class User(TableModel):
 class Password(TableModel):
     __tablename__ = "passwords"
 
-    password_id: SQLDataType = Integer("sqlite3", primary_key=True, unique=True)
+    password_id: SQLDataType = Integer("sqlite3", primary_key=True,
+                                       unique=True)
     app_name: SQLDataType = Text("sqlite3", nullable=False)
     app_url: SQLDataType = Text("sqlite3", nullable=False, unique=True)
     username: SQLDataType = Text("sqlite3", nullable=False, unique=True)
     password: SQLDataType = Text("sqlite3", nullable=False)
+
+
+# Add the created models
+MODELS = [User, Password]
