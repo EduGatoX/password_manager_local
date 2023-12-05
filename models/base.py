@@ -14,11 +14,6 @@ class Table(type):
     __tablename__ = None
 
     def __new__(cls, name, bases, attrs: dict[str, Any]):
-        # Check if __tablename__ has been provided
-        if not cls.__tablename__:
-            raise ValueError("Attribute __tablename__ can't be None."
-                             + "Please provide a non-empty str value.")
-
         # Filter the attributes to those created by the user
         filtered_dict = dict(filter(lambda item: not item[0].startswith("__"),
                                     attrs.items()))
