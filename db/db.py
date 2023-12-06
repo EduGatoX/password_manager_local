@@ -1,30 +1,20 @@
 import sqlite3
 from typing import Protocol, Any
 
-# TODO: Maybe I need to return Messages from DBConnection to the client
-# in order to test/verify the response of every method.
-
-# TODO: I should not depend on the dictionary __TABLES__, this information
-# should come from the module models.py
-
-__TABLES__ = {
-    "users": ["name", "email", "hashed_pw"],
-    "passwords": ["app_name", "app_url", "username", "password", "user_id"],
-}
+from models.base import Table
 
 
 class DBConnection(Protocol):
-    def create_connection(self):
+    def connect(self):
         """Create the connection with the selected engine"""
 
-    def create_table(self, tablename: str, columns: dict[str, str]):
+    def create_table(self, table: Table):
         """Create a new table named 'tablename'.
 
         Args:
             tablename (str) : The name of the new table.
-            columns (dict[str, str]) : A dictionary where (1) its keys represent the
-                name of the columns of the new table and (2) its values represent the data type
-                of each column.
+            table (Table) : A class of type Table where its attributes are the
+            column names for the SQL table.
         """
 
     def insert_into_table(self, tablename: str, data: dict[str, Any]):
@@ -99,19 +89,22 @@ class SQLiteDBConnection:
     def __init__(self, url: str):
         self.url = url
 
-    def create_connection(self):
+    def connect(self):
         self.conn = sqlite3.connect(self.url)
         cur = self.conn.cursor()
         cur.execute("PRAGMA foreign_keys = ON;")
 
-    def create_table(self, tablename: str, columns: dict[str, str]) -> None:
-        if tablename not in __TABLES__:
-            raise ValueError(f"Table {tablename} is not defined as a model.")
+    def create_table(self, table: Table) -> None:
+        columns = list(table.__schema__.keys())
+        modifiers = [v.modifiers for v in table.__schema__.values()]
 
-        column_type_stmts = [f"{column_name} {d_type}" for column_name, d_type in columns.items()]
+        column_stmts = map(
+            lambda item: f"{item[0]} {' '.join(item[1])}",
+            zip(columns, modifiers),
+        )
 
-        sql = f"CREATE TABLE IF NOT EXISTS {tablename} ("
-        sql += f"{', '.join(column_type_stmts)}"
+        sql = f"CREATE TABLE IF NOT EXISTS {table.__tablename__} (\n\t"
+        sql += f"{', \n\t'.join(list(column_stmts))}"
         sql += ");"
 
         cur = self.conn.cursor()
@@ -122,9 +115,6 @@ class SQLiteDBConnection:
             print(sql)
 
     def insert_into_table(self, tablename: str, data: dict[str, Any]) -> None:
-        if tablename not in __TABLES__:
-            raise ValueError(f"Table '{tablename}' does not exist in the database")
-
         columns, values = data.keys(), data.values()
 
         sql = f"INSERT INTO {tablename} \n"
@@ -140,9 +130,6 @@ class SQLiteDBConnection:
             print(sql)
 
     def select_all_from_table(self, tablename: str) -> list[tuple[Any, ...]]:
-        if tablename not in __TABLES__:
-            raise ValueError(f"Table '{tablename}' does not exist in the database")
-
         sql = f"SELECT * FROM {tablename};"
 
         cur = self.conn.cursor()
@@ -154,9 +141,6 @@ class SQLiteDBConnection:
         return cur.fetchall()
 
     def select_from_table_where(self, tablename: str, conditions: dict[str, Any]) -> list[tuple[Any, ...]]:
-        if tablename not in __TABLES__:
-            raise ValueError(f"Table '{tablename}' does not exist in the database")
-
         columns = list(conditions.keys())
         values = list(conditions.values())
 
@@ -172,9 +156,6 @@ class SQLiteDBConnection:
             return None
 
     def update_from_table_where(self, tablename: str, conditions: dict[str, Any], data: dict[str, Any]):
-        if tablename not in __TABLES__:
-            raise ValueError(f"Table '{tablename}' does not exist in the database")
-
         new_values = list(data.values())
         condition_values = list(conditions.values())
 
@@ -190,9 +171,6 @@ class SQLiteDBConnection:
             print(sql)
 
     def delete_from_table_where(self, tablename: str, conditions: dict[str, Any]):
-        if tablename not in __TABLES__:
-            raise ValueError(f"Table '{tablename}' does not exist in the database")
-
         values = list(conditions.values())
 
         sql = f"DELETE FROM {tablename} \n"
