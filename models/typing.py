@@ -1,40 +1,68 @@
-"""This module contains the relationship between python types and sql types"""
+"""
+This module contains the bindings between python types and sql types
 
-# To add a new engine
-# 1. Create a new dictionary with pairs "python_type": "sql_datatype" of the corresponding engine
-# 2. Add the relationship in "python_sql_type_relationships" dictionary, using a string as key (that
-# string will be used in the configuration)
+To add a new engine, follow the next steps.
 
-# sqlite type relationship
-python_sqlite_type_relationship = {
+1. Create a new dictionary of type bindings between python types and SQL types of the desired engine.
+Each item in the dictionary should follow the example: (int : 'INTEGER'). In this example 'int' is the python type
+given as a key, and 'INTEGER' is the str representation of the SQL datatype the match the python type 'int'.
+
+2. Create a new dictionary of constraints of the desired SQL engine. Constraints are restrictions for data inside
+the database engine that should be respected when entering new data. For example, NOT NULL in sqlite3 means that
+the data entered in the respective column should be a NOT NULL value. Other example is UNIQUE in sqlite3, that means
+that every entry in that column should be entered only once.
+
+Each item in the dictionary should follow the example: ('not_null': 'NOT NULL'), where 'not null' is the key that is used in
+tge definition of SQLDataType and 'NOT NULL' is the sqlite3 str representation of the contraint.
+
+At the moment there are 3 constraints supported, those are 'not_null', 'primary_key' and 'unique'.
+
+3. Add the bindings between the database engine and the type bindings in the TYPE_BINDINGS dictionary. The
+binding should follow the example: ("sqlite3": sqlite_type_binding) where the str "sqlite3" is the key that
+should be provided in config.py as part of the constant DB_ENGINE. sqlite_type_binding is the dictionary created
+in step 1 (in this case for the 'sqlite3' engine)
+
+4. Add the bindings between the database engine and the sql_constraints in the SQL_CONSTRAINTS dictionary. The binding
+should follow the example ('sqlite3' : sqlite_constraints) where 'sqlite3' is the DB_ENGINE that should be provided in config.py
+and sqlite_constraints is the dictionary created in step 2 (in this case for 'sqlite3' engine)
+"""
+
+from config import DB_ENGINE
+
+# Create your bindings here
+
+# sqlite type bindings
+sqlite_type_binding = {
     int: "INTEGER",
     float: "REAL",
     str: "TEXT",
     None: "NULL",
 }
 
-# sqlite type modifiers
-sqlite_type_modifiers = {
+# sqlite type constraints
+sqlite_constraints = {
     "not_null": "NOT NULL",
     "primary_key": "PRIMARY KEY",
     "unique": "UNIQUE",
 }
 
+# Create your bindings here
+
 # Relationship between engines and type relationships
-python_sql_type_relationships = {
-    "sqlite3": python_sqlite_type_relationship,
+TYPE_BINDINGS = {
+    "sqlite3": sqlite_type_binding,
 }
 
-# Relationship between engines and type modifiers
-engine_sql_type_modifiers_relationships = {
-    "sqlite3": sqlite_type_modifiers,
+# Relationship between engines and type constraints
+SQL_CONSTRAINTS = {
+    "sqlite3": sqlite_constraints,
 }
 
 
 class SQLDataType:
-    def __init__(self, db_engine: str, py_type: type, nullable: bool = True,
+    def __init__(self, py_type: type, nullable: bool = True,
                  primary_key: bool = False, unique: bool = False):
-        self.db_engine = db_engine
+        self.db_engine = DB_ENGINE
         self.py_type = py_type
         self.nullable = nullable if not primary_key else False
         self.primary_key = primary_key
@@ -42,47 +70,44 @@ class SQLDataType:
 
     @property
     def d_type(self) -> str:
-        return python_sql_type_relationships\
+        return TYPE_BINDINGS\
             .get(self.db_engine, None)\
             .get(self.py_type, None)
 
     @property
-    def modifiers(self) -> list[str]:
+    def constraints(self) -> list[str]:
         mods = []
         if not self.nullable:
-            mods.append(engine_sql_type_modifiers_relationships
+            mods.append(SQL_CONSTRAINTS
                         .get(self.db_engine, None)
                         .get("not_null", None))
         if self.primary_key:
-            mods.append(engine_sql_type_modifiers_relationships
+            mods.append(SQL_CONSTRAINTS
                         .get(self.db_engine, None)
                         .get("primary_key", None))
         if self.unique:
-            mods.append(engine_sql_type_modifiers_relationships
+            mods.append(SQL_CONSTRAINTS
                         .get(self.db_engine, None)
                         .get("unique", None))
         return mods
 
-    def __repr__(self) -> str:
-        return str(self.__class__)
-
 
 class Integer(SQLDataType):
-    def __init__(self, db_engine: str, nullable: bool = True, primary_key: bool = False, unique: bool = False):
-        super().__init__(db_engine, int, nullable=nullable,
+    def __init__(self, nullable: bool = True, primary_key: bool = False, unique: bool = False):
+        super().__init__(int, nullable=nullable,
                          primary_key=primary_key, unique=unique)
 
 
 class Float(SQLDataType):
-    def __init__(self, db_engine: str, nullable: bool = True, unique: bool = False):
-        super().__init__(db_engine, float, nullable=nullable, unique=unique)
+    def __init__(self, nullable: bool = True, unique: bool = False):
+        super().__init__(float, nullable=nullable, unique=unique)
 
 
 class Text(SQLDataType):
-    def __init__(self, db_engine: str, nullable: bool = True, unique: bool = False):
-        super().__init__(db_engine, str, nullable=nullable, unique=unique)
+    def __init__(self, nullable: bool = True, unique: bool = False):
+        super().__init__(str, nullable=nullable, unique=unique)
 
 
 class NullType(SQLDataType):
-    def __init__(self, db_engine: str):
-        super().__init__(db_engine, None)
+    def __init__(self):
+        super().__init__(None)
