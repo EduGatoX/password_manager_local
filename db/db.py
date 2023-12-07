@@ -96,11 +96,11 @@ class SQLiteDBConnection:
 
     def create_table(self, table: Table) -> None:
         columns = list(table.__schema__.keys())
-        modifiers = [v.modifiers for v in table.__schema__.values()]
+        contraints = [v.constraints for v in table.__schema__.values()]
 
         column_stmts = map(
             lambda item: f"{item[0]} {' '.join(item[1])}",
-            zip(columns, modifiers),
+            zip(columns, contraints),
         )
 
         sql = f"CREATE TABLE IF NOT EXISTS {table.__tablename__} (\n\t"
