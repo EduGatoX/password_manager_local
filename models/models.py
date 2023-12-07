@@ -64,7 +64,7 @@ def validate_data(table: Table, data: dict[str, Any]) -> bool:
 
     # Check type of values
     for key, value in data.items():
-        sql_data_type = table_schema.get(key, NullType("sqlite3"))
+        sql_data_type = table_schema.get(key, NullType())
         if not isinstance(value, sql_data_type.py_type):
             return False
 
