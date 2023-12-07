@@ -5,11 +5,9 @@ import password as pw
 from messages import Message, Messages
 from models import MODELS
 
-# DB engine to use: "sqlite3", ...
-DB_ENGINE = "sqlite3"
-
-# DB URL
-DATABASE_URL = "password.db"
+# Important: First check config.py if DB_ENGINE and DATABASE_URL
+# are defined.
+from config import DB_ENGINE, DATABASE_URL
 
 
 def greet():
