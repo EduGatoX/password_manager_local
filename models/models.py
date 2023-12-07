@@ -25,24 +25,24 @@ from typing import Any
 class User(TableModel):
     __tablename__ = "users"
 
-    user_id: SQLDataType = Integer("sqlite3", primary_key=True, unique=True)
-    name: SQLDataType = Text("sqlite3", False)
-    email: SQLDataType = Text("sqlite3", False)
-    hashed_pw: SQLDataType = Text("sqlite3", False)
+    user_id: SQLDataType = Integer(primary_key=True, unique=True)
+    name: SQLDataType = Text(nullable=False)
+    email: SQLDataType = Text(nullable=False)
+    hashed_pw: SQLDataType = Text(nullable=False)
 
 
 class Password(TableModel):
     __tablename__ = "passwords"
 
-    password_id: SQLDataType = Integer("sqlite3", primary_key=True,
+    password_id: SQLDataType = Integer(primary_key=True,
                                        unique=True)
-    app_name: SQLDataType = Text("sqlite3", nullable=False)
-    app_url: SQLDataType = Text("sqlite3", nullable=False, unique=True)
-    username: SQLDataType = Text("sqlite3", nullable=False, unique=True)
-    password: SQLDataType = Text("sqlite3", nullable=False)
+    app_name: SQLDataType = Text(nullable=False)
+    app_url: SQLDataType = Text(nullable=False, unique=True)
+    username: SQLDataType = Text(nullable=False, unique=True)
+    password: SQLDataType = Text(nullable=False)
 
 
-# Add the created models
+# Add the created models to the list MODELS
 MODELS = [User, Password]
 
 
