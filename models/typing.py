@@ -27,6 +27,7 @@ should follow the example ('sqlite3' : sqlite_constraints) where 'sqlite3' is th
 and sqlite_constraints is the dictionary created in step 2 (in this case for 'sqlite3' engine)
 """
 
+from __future__ import annotations
 from config import DB_ENGINE
 
 # Create your bindings here
@@ -90,6 +91,11 @@ class SQLDataType:
                         .get(self.db_engine, None)
                         .get("unique", None))
         return mods
+
+    def __eq__(self, obj: SQLDataType):
+        """Returns True if  obj is equal to self and False if not"""
+        return (obj.py_type, obj.nullable, obj.primary_key, obj.unique) == \
+            (self.py_type, self.nullable, self.primary_key, self.unique)
 
 
 class Integer(SQLDataType):
