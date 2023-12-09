@@ -65,8 +65,16 @@ class SQLDataType:
                  primary_key: bool = False, unique: bool = False):
         self.db_engine = DB_ENGINE
         self.py_type = py_type
-        self.nullable = nullable if not primary_key else False
+
+        if primary_key:
+            # primary_key overrides nullable and unique attributes
+            self.primary_key = primary_key
+            self.nullable = True
+            self.unique = False
+            return
+        
         self.primary_key = primary_key
+        self.nullable = nullable
         self.unique = unique
 
     @property
