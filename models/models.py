@@ -15,9 +15,9 @@ Float or NullType). You should select one as a primary key.
 5) Finally, add the models to the list MODELS at the end of this module.
 """
 
-from .base import Table, TableModel
+from .base import TableModel
 from .typing import SQLDataType, Integer, Text, Float, NullType
-from typing import Any
+
 
 # Create your models here
 
@@ -27,7 +27,7 @@ class User(TableModel):
 
     user_id: SQLDataType = Integer(primary_key=True)
     name: SQLDataType = Text(nullable=False)
-    email: SQLDataType = Text(nullable=False)
+    email: SQLDataType = Text(nullable=False, unique=True)
     hashed_pw: SQLDataType = Text(nullable=False)
 
 
