@@ -25,7 +25,7 @@ from typing import Any
 class User(TableModel):
     __tablename__ = "users"
 
-    user_id: SQLDataType = Integer(primary_key=True, unique=True)
+    user_id: SQLDataType = Integer(primary_key=True)
     name: SQLDataType = Text(nullable=False)
     email: SQLDataType = Text(nullable=False)
     hashed_pw: SQLDataType = Text(nullable=False)
@@ -44,39 +44,3 @@ class Password(TableModel):
 
 # Add the created models to the list MODELS
 MODELS = [User, Password]
-
-
-def validate_data(table: Table, data: dict[str, Any]) -> bool:
-    """Validates 'data' against 'table' so that it respects the schema defined by the model.
-
-    Args:
-        table (Table) : A table model as defined in this module.
-        data (data[str, Any]) : data to be validated against the model.
-
-    Return:
-        True if 'data' is successfully validated and False if not.
-    """
-    table_schema = table.__schema__
-    # Check if keys exist in the table
-    for key in data:
-        if key not in table_schema:
-            return False
-
-    # Check type of values
-    for key, value in data.items():
-        sql_data_type = table_schema.get(key, NullType())
-        if not isinstance(value, sql_data_type.py_type):
-            return False
-
-    for key, value in table_schema.items():
-        # Check primary key (it shouldn't be part of data)
-        if value.primary_key and key in data:
-            return False
-        elif value.primary_key and key not in data:
-            continue
-        # Check nullability
-        if not value.nullable and key not in data:
-            return False
-        # TODO: Check uniqueness (HOW? Probably we should leave that to the DBConnection)
-
-    return True
