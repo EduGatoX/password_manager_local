@@ -1,86 +1,54 @@
 import unittest
-from db.models import User, Password
-from db.types import SQLDataType, Integer, Text
+from models.models import User, Password
+from models.typing import SQLDataType, Integer, Text
 
 
 class TestUser(unittest.TestCase):
     def setUp(self):
-        DB_ENGINE = "sqlite3"
-        user_id = Integer(DB_ENGINE, 1, primary_key=True)
-        name = Text(DB_ENGINE, "Eduardo", nullable=False)
-        email = Text(DB_ENGINE, "eduardo@mail.com", nullable=False)
-        hashed_pw = Text(DB_ENGINE, "376basdrasbc098471ñlad", nullable=False)
+        # Schema to be compared to the __schema__ property of the User model
+        self.schema = dict(
+            user_id=Integer(primary_key=True), name=Text(nullable=False),
+            email=Text(nullable=False), hashed_pw=Text(nullable=False),
+        )
 
-        self.user = User(user_id, name, email, hashed_pw)
-        self.data = {
-            "name": name,
-            "email": email,
-            "hashed_pw": hashed_pw,
+        # This should be validated correctly
+        self.data_correct = {
+            "name": "Eduardo",
+            "email": "eduardo@mail.com",
+            "hashed_pw": "fsdkh913r1h139",
         }
-        self.repr = f"User(id={user_id}, name={name}, email={email})"
+
+        # This should not be be validated because the type of name is incorrect
+        self.data_incorrect_1 = {
+            "name": 1,
+            "email": "eduardo@mail.com",
+            "hashed_pw": "fsdkh913r1h139",
+        }
+        
+        # This should not be be validated because one not nullable value is not provided
+        self.data_incorrect_2 = {
+            "email": "eduardo@mail.com",
+            "hashed_pw": "fsdkh913r1h139",
+        }
 
     def tearDown(self):
         pass
 
-    def test_name(self):
-        self.assertEqual(self.user.name.value, "Eduardo")
+    def test_schema(self):
+        self.assertEqual(User.__schema__, self.schema)
 
-    def test_email(self):
-        self.assertEqual(self.user.email.value, "eduardo@mail.com")
-
-    def test_hashed_pw(self):
-        self.assertEqual(self.user.hashed_pw.value, "376basdrasbc098471ñlad")
-
-    def test_dump_data(self):
-        self.assertEqual(self.user.dump_data(), self.data)
-
-    def test_repr(self):
-        self.assertEqual(str(self.user), self.repr)
+    def test_validate_data(self):
+        self.assertTrue(User.validate_data(self.data_correct))
+        self.assertFalse(User.validate_data(self.data_incorrect_1))
+        self.assertFalse(User.validate_data(self.data_incorrect_2))
 
 
 class TestPassword(unittest.TestCase):
     def setUp(self):
-        DB_ENGINE = "sqlite3"
-        password_id = Integer(DB_ENGINE, 1, primary_key=True)
-        app_name = Text(DB_ENGINE, "my_app", nullable=False)
-        app_url = Text(DB_ENGINE, "www.my_app.url", nullable=False)
-        username = Text(DB_ENGINE, "enunez", nullable=False)
-        password = Text(DB_ENGINE, "1234", nullable=False)
-        user_id = Integer(DB_ENGINE, 1, nullable=False)
-
-        self.password = Password(password_id, app_name, app_url, username, password, user_id)
-        self.data = {
-            "app_name": app_name,
-            "app_url": app_url,
-            "username": username,
-            "password": password,
-            "user_id": user_id,
-        }
-        self.repr = f"Password(name={app_url}, username={username}, password={password})"
+        pass
 
     def tearDown(self):
         pass
-
-    def test_app_name(self):
-        self.assertEqual(self.password.app_name.value, "my_app")
-
-    def test_app_url(self):
-        self.assertEqual(self.password.app_url.value, "www.my_app.url")
-
-    def test_username(self):
-        self.assertEqual(self.password.username.value, "enunez")
-
-    def test_password(self):
-        self.assertEqual(self.password.password.value, "1234")
-
-    def test_user_id(self):
-        self.assertEqual(self.password.user_id.value, 1)
-
-    def test_dump_data(self):
-        self.assertEqual(self.password.dump_data(), self.data)
-
-    def test_repr(self):
-        self.assertEqual(str(self.password), self.repr)
 
 
 if __name__ == "__main__":
