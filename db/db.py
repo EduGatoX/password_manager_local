@@ -133,43 +133,41 @@ class SQLiteDBConnection:
 
         return sql
 
-    def insert_into_table(self, tablename: str, data: dict[str, Any]) -> str:
-        columns, values = data.keys(), data.values()
+    def insert_into_table(self, table: Table) -> str:
 
-        sql = f"INSERT INTO {tablename} \n"
+        filtered_dict = dict(filter(lambda item: not item[1].primary_key,
+                                    table.__schema__.items()))
+
+        columns = list(filtered_dict.keys())
+
+        sql = f"INSERT INTO {table.__tablename__} \n"
         sql += f"({', '.join(columns)}) \n"
-        sql += f"VALUES ({', '.join(['?' for _ in values])});"
+        sql += f"VALUES ({', '.join(['?' for _ in columns])});"
 
         return sql
 
-    def select_all_from_table(self, tablename: str) -> str:
-        sql = f"SELECT * FROM {tablename};"
+    def select_all_from_table(self, table: Table) -> str:
+        sql = f"SELECT * FROM {table.__tablename__};"
 
         return sql
 
-    def select_from_table_where(self, tablename: str, conditions: dict[str, Any]) -> str:
+    def select_from_table_where(self, table: Table, conditions: dict[str, Any]) -> str:
         columns = list(conditions.keys())
-        values = list(conditions.values())
 
-        sql = f"SELECT * FROM {tablename} \n\t"
+        sql = f"SELECT * FROM {table.__tablename__} \n\t"
         sql += f"WHERE {', \n\t'.join([f'{k} = ?' for k in columns])};"
 
         return sql
 
-    def update_from_table_where(self, tablename: str, conditions: dict[str, Any], data: dict[str, Any]) -> str:
-        new_values = list(data.values())
-        condition_values = list(conditions.values())
-
-        sql = f"UPDATE {tablename} \n"
+    def update_from_table_where(self, table: Table, conditions: dict[str, Any], data: dict[str, Any]) -> str:
+        sql = f"UPDATE {table.__tablename__} \n"
         sql += f"SET {', \n\t'.join([f'{k} = ?' for k in data.keys()])} \n"
         sql += f"WHERE {', \n\t'.join([f'{k} = ?' for k in conditions.keys()])};"
 
         return sql
 
-    def delete_from_table_where(self, tablename: str, conditions: dict[str, Any]) -> str:
-        values = list(conditions.values())
-
-        sql = f"DELETE FROM {tablename} \n"
+    def delete_from_table_where(self, table: Table, conditions: dict[str, Any]) -> str:
+        sql = f"DELETE FROM {table.__tablename__} \n"
         sql += f"WHERE {', \n\t'.join([f'{k} = ?' for k in conditions.keys()])};"
 
         return sql
