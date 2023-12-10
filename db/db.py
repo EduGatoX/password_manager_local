@@ -12,57 +12,53 @@ class DBConnection(Protocol):
         """Return the sql statement for create table define by the model 'table'.
 
         Args:
-            table (Table) : A class of type Table where its attributes are the
-            column names for the SQL table.
+            table (Table) : A class of type Table
 
         Return:
             The sql statement for creating the new table
         """
 
-    def insert_into_table(self, tablename: str, data: dict[str, Any]) -> str:
-        """Return the sql statement for inserting 'data' into the table named 'tablename'
+    def insert_into_table(self, table: Table) -> str:
+        """Return the sql statement for inserting 'data' into the 'table'.
 
         Args:
-            tablename (str) : The name of the table.
-            data (dict[str, Any]) : A dictionary where (1) its keys represent the names of the columns that are
-                called in the insertion and (2) its values are regular python datatype values to be inserted for
-                each column
+            table (Table) : A class of type Table
 
         Return:
             The sql statement for inserting 'data'
         """
 
-    def select_all_from_table(self, tablename: str) -> str:
-        """Return the sql statement for selecting all the entries from table named 'tablename'
+    def select_all_from_table(self, table: Table) -> str:
+        """Return the sql statement for selecting all the entries from 'table'.
 
         Args:
-            tablename (str) : The name of the table.
+            table (Table) : A class of type Table
 
         Return:
-            The sql statement for selecting all the entries from table named 'tablename'
+            The sql statement for selecting all the entries from 'table'
         """
 
-    def select_from_table_where(self, tablename: str, conditions: dict[str, Any]) -> str:
+    def select_from_table_where(self, table: Table, conditions: dict[str, Any]) -> str:
         """Return the sql statement for selecting all the entries from table named 'tablename' matching the conditions given by
         the dictionary 'conditions'
 
         Args:
-            tablename (str) : The name of the table
+            table (Table) : A class of type Table
             conditions (dict[str, Any]) : A dictionary where (1) its keys represent the names of the columns
                 that are called in the selection and (2) its values are regular python datatype values that
                 are part of the condition.
 
         Return:
-            The sql statement for selecting all the entries from table named 'tablename' matching the conditions given by
+            The sql statement for selecting all the entries from 'table' matching the conditions given by
             the dictionary 'conditions'
         """
 
-    def update_from_table_where(self, tablename: str, conditions: dict[str, Any], data: dict[str, Any]) -> str:
-        """Return the sql statement for updating all the entries from table named 'tablename' matching the conditions given 
+    def update_from_table_where(self, table: Table, conditions: dict[str, Any], data: dict[str, Any]) -> str:
+        """Return the sql statement for updating all the entries from 'table' matching the conditions given 
         by the dictionary 'conditions' and replacing them with the values inside 'data'.
 
         Args:
-            tablename (str) : The name of the table
+            table (Table) : A class of type Table
             conditions (dict[str, Any]) : A dictionary where (1) its keys represent the names of the columns
                 that are called in the selection and (2) its values are regular python datatype values that
                 are part of the condition.
@@ -71,22 +67,22 @@ class DBConnection(Protocol):
                 each column
 
         Return:
-            The sql statement for updating all the entries from table named 'tablename' matching the conditions given 
+            The sql statement for updating all the entries from 'table' matching the conditions given 
             by the dictionary 'conditions' and replacing them with the values inside 'data'
         """
 
-    def delete_from_table_where(self, tablename: str, conditions: dict[str, Any]) -> str:
-        """Return the sql statement for deleting all the entries from table named 'tablename' matching the conditions given
+    def delete_from_table_where(self, table: Table, conditions: dict[str, Any]) -> str:
+        """Return the sql statement for deleting all the entries from 'table' matching the conditions given
         by the dictionary 'conditions'.
 
         Args:
-            tablename (str) : The name of the table.
+            table (Table) : A class of type Table
             conditions (dict[str, Any]) : A dictionary where (1) its keys represent the names of the columns
                 that are called in the deletion and (2) its values are regular python datatype values that
                 are part of the condition.
 
         Return:
-            The sql statement for deleting all the entries from table named 'tablename' matching the conditions given
+            The sql statement for deleting all the entries from 'table' matching the conditions given
             y the dictionary 'conditions'.
         """
 
