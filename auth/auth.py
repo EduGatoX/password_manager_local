@@ -3,6 +3,7 @@ from getpass import getpass
 from typing import Any
 
 import db
+from models.base import Table
 from models.models import User
 from helper import Option, index, choice
 from messages import Messages, Message
@@ -15,6 +16,12 @@ def validate_password(plain_pw: str, hashed_pw: str) -> bool:
 def hash_password(plain_pw: str) -> str:
     salt = bcrypt.gensalt()
     return bcrypt.hashpw(plain_pw.encode("utf8"), salt).decode("utf8")
+
+
+def params_exist(conn: db.DBConnection, table: Table, **params: dict[str, Any]) -> bool:
+    sql = conn.select_from_table_where(table, params)
+    result = conn.execute(sql, tuple(params.values()))
+    return result != []
 
 
 def create_user_dict_from_tuple(user_id: int, name: str, email: str, hashed_pw: str):
@@ -48,8 +55,12 @@ def sign_up(conn: db.DBConnection) -> Message:
     plain_pw: str = getpass(f"{'Enter password: ':<25}")
     confirm_pw: str = getpass(f"{'Confirm password: ':<25}")
 
+    if params_exist(conn, User, email=email):
+        print("\nEmail is already registered. Please, try again.")
+        return Message(Messages.SIGN_UP_FAILURE, None)
+
     if plain_pw != confirm_pw:
-        print("Passwords don't match. Try again.")
+        print("\nPasswords don't match. Please, try again.")
         return sign_up(conn)
 
     hashed_pw = hash_password(plain_pw)
@@ -57,7 +68,7 @@ def sign_up(conn: db.DBConnection) -> Message:
     user = dict(name=name, email=email, hashed_pw=hashed_pw)
 
     if not User.validate_data(user):
-        print("Data entered is invalid. Please try again.")
+        print("\nData entered is invalid. Please, try again.")
         return Message(Messages.SIGN_UP_FAILURE, None)
 
     sql = conn.insert_into_table(User)
@@ -85,7 +96,7 @@ def mainloop(conn: db.DBConnection) -> Message:
     if not option:
         print("Invalid input. Please try again.")
         return mainloop(conn)
-    
+
     response = option.func(conn)
 
     return response
