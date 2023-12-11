@@ -31,17 +31,20 @@ def main():
 
     # create tables based on the models
     for model in MODELS:
-        conn.create_table(model)
+        sql = conn.create_table(model)
+        conn.execute(sql)
 
     while True:
         # enter auth application
-        response = auth.mainloop(conn)
+        response: Message = auth.mainloop(conn)
 
         match response.message:
             case Messages.LOGIN_SUCCESS:
                 # enter password manager application with authenticated user
                 user = response.data
-                pw.mainloop(conn, user)
+                print(user)
+                print(response.message)
+                # pw.mainloop(conn, user)
 
             case Messages.QUIT:
                 break
