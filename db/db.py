@@ -1,91 +1,100 @@
 import sqlite3
 from typing import Protocol, Any
 
-# TODO: Maybe I need to return Messages from DBConnection to the client
-# in order to test/verify the response of every method.
-
-# TODO: I should not depend on the dictionary __TABLES__, this information
-# should come from the module models.py
-
-__TABLES__ = {
-    "users": ["name", "email", "hashed_pw"],
-    "passwords": ["app_name", "app_url", "username", "password", "user_id"],
-}
+from models.base import Table
 
 
 class DBConnection(Protocol):
-    def create_connection(self):
+    def connect(self) -> None:
         """Create the connection with the selected engine"""
 
-    def create_table(self, tablename: str, columns: dict[str, str]):
-        """Create a new table named 'tablename'.
+    def create_table(self, table: Table) -> str:
+        """Return the sql statement for create table define by the model 'table'.
 
         Args:
-            tablename (str) : The name of the new table.
-            columns (dict[str, str]) : A dictionary where (1) its keys represent the
-                name of the columns of the new table and (2) its values represent the data type
-                of each column.
-        """
-
-    def insert_into_table(self, tablename: str, data: dict[str, Any]):
-        """Insert 'data' into the table named 'tablename'
-
-        Args:
-            tablename (str) : The name of the table.
-            data (dict[str, Any]) : A dictionary where (1) its keys represent the names of the columns that are
-                called in the insertion and (2) its values are regular python datatype values to be inserted for
-                each column
-        """
-
-    def select_all_from_table(self, tablename: str) -> list[tuple[Any, ...]]:
-        """Select all the entries from table called 'tablename'
-
-        Args:
-            tablename (str) : The name of the table.
+            table (Table) : A class of type Table
 
         Return:
-            A list with all the table entries. Each entry is a tuple containing the values
-            for each column using basic python datatypes.
+            The sql statement for creating the new table
         """
 
-    def select_from_table_where(self, tablename: str, conditions: dict[str, Any]) -> list[tuple[Any, ...]]:
-        """Select all the entries from table named 'tablename' matching the conditions given by
+    def insert_into_table(self, table: Table) -> str:
+        """Return the sql statement for inserting 'data' into the 'table'.
+
+        Args:
+            table (Table) : A class of type Table
+
+        Return:
+            The sql statement for inserting 'data'
+        """
+
+    def select_all_from_table(self, table: Table) -> str:
+        """Return the sql statement for selecting all the entries from 'table'.
+
+        Args:
+            table (Table) : A class of type Table
+
+        Return:
+            The sql statement for selecting all the entries from 'table'
+        """
+
+    def select_from_table_where(self, table: Table, conditions: dict[str, Any]) -> str:
+        """Return the sql statement for selecting all the entries from table named 'tablename' matching the conditions given by
         the dictionary 'conditions'
 
         Args:
-            tablename (str) : The name of the table
+            table (Table) : A class of type Table
             conditions (dict[str, Any]) : A dictionary where (1) its keys represent the names of the columns
                 that are called in the selection and (2) its values are regular python datatype values that
                 are part of the condition.
 
         Return:
-            A list with all the table entries matching the conditions. Each entry is a tuple containing the values
-            for each column using basic python datatypes.
+            The sql statement for selecting all the entries from 'table' matching the conditions given by
+            the dictionary 'conditions'
         """
 
-    def update_from_table_where(self, tablename: str, conditions: dict[str, Any], data: dict[str, Any]):
-        """Update all the entries from table named 'tablename' matching the conditions given by the dictionary 'conditions'
-        and replacing the values with the data inside 'data'.
+    def update_from_table_where(self, table: Table, conditions: dict[str, Any], data: dict[str, Any]) -> str:
+        """Return the sql statement for updating all the entries from 'table' matching the conditions given 
+        by the dictionary 'conditions' and replacing them with the values inside 'data'.
 
         Args:
-            tablename (str) : The name of the table
+            table (Table) : A class of type Table
             conditions (dict[str, Any]) : A dictionary where (1) its keys represent the names of the columns
                 that are called in the selection and (2) its values are regular python datatype values that
                 are part of the condition.
             data (dict[str, Any]) : A dictionary where (1) its keys represent the names of the columns that are
                 called in the update and (2) its values are regular python datatype values to be replaced for
                 each column
+
+        Return:
+            The sql statement for updating all the entries from 'table' matching the conditions given 
+            by the dictionary 'conditions' and replacing them with the values inside 'data'
         """
 
-    def delete_from_table_where(self, tablename: str, conditions: dict[str, Any]):
-        """Delete all the entries from table named 'tablename' matching the conditions given
+    def delete_from_table_where(self, table: Table, conditions: dict[str, Any]) -> str:
+        """Return the sql statement for deleting all the entries from 'table' matching the conditions given
         by the dictionary 'conditions'.
 
         Args:
-            tablename (str) : The name of the table.
+            table (Table) : A class of type Table
             conditions (dict[str, Any]) : A dictionary where (1) its keys represent the names of the columns
                 that are called in the deletion and (2) its values are regular python datatype values that
                 are part of the condition.
+
+        Return:
+            The sql statement for deleting all the entries from 'table' matching the conditions given
+            y the dictionary 'conditions'.
+        """
+
+    def execute(self, sql: str, parameters: tuple[Any, ...] = ()) -> list[Any]:
+        """Execute the sql statement with the parameters given in the arguments.
+
+        Args:
+            sql (str) : The sql statement.
+            parameters (tuple[Any, ...]) : The parameters that will be replaced in the sql statement placeholders.
+
+        Return:
+            A list with the data requested in the sql statement or an empty list if no data was requested in the sql statement
         """
 
     def commit(self):
@@ -99,111 +108,75 @@ class SQLiteDBConnection:
     def __init__(self, url: str):
         self.url = url
 
-    def create_connection(self):
+    def connect(self):
         self.conn = sqlite3.connect(self.url)
         cur = self.conn.cursor()
         cur.execute("PRAGMA foreign_keys = ON;")
 
-    def create_table(self, tablename: str, columns: dict[str, str]) -> None:
-        if tablename not in __TABLES__:
-            raise ValueError(f"Table {tablename} is not defined as a model.")
+    def create_table(self, table: Table) -> str:
+        columns = list(table.__schema__.keys())
+        d_types = [v.d_type for v in table.__schema__.values()]
+        contraints = [v.constraints for v in table.__schema__.values()]
 
-        column_type_stmts = [f"{column_name} {d_type}" for column_name, d_type in columns.items()]
+        column_stmts = map(
+            lambda item: f"{item[0]} {item[1]} {' '.join(item[2])}",
+            zip(columns, d_types, contraints),
+        )
 
-        sql = f"CREATE TABLE IF NOT EXISTS {tablename} ("
-        sql += f"{', '.join(column_type_stmts)}"
+        sql = f"CREATE TABLE IF NOT EXISTS {table.__tablename__} (\n\t"
+        sql += f"{', \n\t'.join(list(column_stmts))}"
         sql += ");"
 
-        cur = self.conn.cursor()
-        try:
-            cur.execute(sql)
-        except Exception as e:
-            print(e)
-            print(sql)
+        return sql
 
-    def insert_into_table(self, tablename: str, data: dict[str, Any]) -> None:
-        if tablename not in __TABLES__:
-            raise ValueError(f"Table '{tablename}' does not exist in the database")
+    def insert_into_table(self, table: Table) -> str:
 
-        columns, values = data.keys(), data.values()
+        filtered_dict = dict(filter(lambda item: not item[1].primary_key,
+                                    table.__schema__.items()))
 
-        sql = f"INSERT INTO {tablename} \n"
+        columns = list(filtered_dict.keys())
+
+        sql = f"INSERT INTO {table.__tablename__} \n"
         sql += f"({', '.join(columns)}) \n"
-        sql += f"VALUES ({', '.join(['?' for _ in values])});"
+        sql += f"VALUES ({', '.join(['?' for _ in columns])});"
 
-        cur = self.conn.cursor()
+        return sql
 
-        try:
-            cur.execute(sql, list(values))
-        except Exception as e:
-            print(e)
-            print(sql)
+    def select_all_from_table(self, table: Table) -> str:
+        sql = f"SELECT * FROM {table.__tablename__};"
 
-    def select_all_from_table(self, tablename: str) -> list[tuple[Any, ...]]:
-        if tablename not in __TABLES__:
-            raise ValueError(f"Table '{tablename}' does not exist in the database")
+        return sql
 
-        sql = f"SELECT * FROM {tablename};"
-
-        cur = self.conn.cursor()
-        try:
-            cur.execute(sql)
-        except Exception as e:
-            print(e)
-
-        return cur.fetchall()
-
-    def select_from_table_where(self, tablename: str, conditions: dict[str, Any]) -> list[tuple[Any, ...]]:
-        if tablename not in __TABLES__:
-            raise ValueError(f"Table '{tablename}' does not exist in the database")
-
+    def select_from_table_where(self, table: Table, conditions: dict[str, Any]) -> str:
         columns = list(conditions.keys())
-        values = list(conditions.values())
 
-        sql = f"SELECT * FROM {tablename} \n\t"
+        sql = f"SELECT * FROM {table.__tablename__} \n\t"
         sql += f"WHERE {', \n\t'.join([f'{k} = ?' for k in columns])};"
 
-        cur = self.conn.cursor()
-        try:
-            cur.execute(sql, values)
-            return cur.fetchall()
-        except Exception as e:
-            print(e)
-            return None
+        return sql
 
-    def update_from_table_where(self, tablename: str, conditions: dict[str, Any], data: dict[str, Any]):
-        if tablename not in __TABLES__:
-            raise ValueError(f"Table '{tablename}' does not exist in the database")
-
-        new_values = list(data.values())
-        condition_values = list(conditions.values())
-
-        sql = f"UPDATE {tablename} \n"
+    def update_from_table_where(self, table: Table, conditions: dict[str, Any], data: dict[str, Any]) -> str:
+        sql = f"UPDATE {table.__tablename__} \n"
         sql += f"SET {', \n\t'.join([f'{k} = ?' for k in data.keys()])} \n"
         sql += f"WHERE {', \n\t'.join([f'{k} = ?' for k in conditions.keys()])};"
 
-        cur = self.conn.cursor()
-        try:
-            cur.execute(sql, [*new_values, *condition_values])
-        except Exception as e:
-            print(e)
-            print(sql)
+        return sql
 
-    def delete_from_table_where(self, tablename: str, conditions: dict[str, Any]):
-        if tablename not in __TABLES__:
-            raise ValueError(f"Table '{tablename}' does not exist in the database")
-
-        values = list(conditions.values())
-
-        sql = f"DELETE FROM {tablename} \n"
+    def delete_from_table_where(self, table: Table, conditions: dict[str, Any]) -> str:
+        sql = f"DELETE FROM {table.__tablename__} \n"
         sql += f"WHERE {', \n\t'.join([f'{k} = ?' for k in conditions.keys()])};"
 
-        cur = self.conn.cursor()
+        return sql
+
+    def execute(self, sql: str, parameters: tuple[Any, ...] = ()) -> list[Any]:
         try:
-            cur.execute(sql, values)
+            cur = self.conn.cursor()
+            cur.execute(sql, parameters)
+            return cur.fetchall()
         except Exception as e:
             print(e)
             print(sql)
+            return []
 
     def commit(self):
         self.conn.commit()

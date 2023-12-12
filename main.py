@@ -3,16 +3,11 @@ import db
 import password as pw
 
 from messages import Message, Messages
+from models import MODELS
 
-# DB engine to use: "sqlite", ...
-DB_ENGINE = "sqlite"
-
-# DB URL
-DATABASE_URL = "password.db"
-
-# create new models in db.models and then put them here in the list
-# as a type
-MODELS = [db.models.User, db.models.Password]
+# Important: First check config.py if DB_ENGINE and DATABASE_URL
+# are defined.
+from config import DB_ENGINE, DATABASE_URL
 
 
 def greet():
@@ -32,20 +27,24 @@ def main():
     conn = db.DBConnectionFactory(DB_ENGINE, DATABASE_URL)
 
     # create connection
-    conn.create_connection()
+    conn.connect()
 
     # create tables based on the models
-    conn.create_tables(MODELS)
+    for model in MODELS:
+        sql = conn.create_table(model)
+        conn.execute(sql)
 
     while True:
         # enter auth application
-        response = auth.mainloop(conn)
+        response: Message = auth.mainloop(conn)
 
         match response.message:
             case Messages.LOGIN_SUCCESS:
                 # enter password manager application with authenticated user
                 user = response.data
-                pw.mainloop(conn, user)
+                print(user)
+                print(response.message)
+                # pw.mainloop(conn, user)
 
             case Messages.QUIT:
                 break
